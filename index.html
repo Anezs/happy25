@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Ulang Tahun, Ito Hasian!</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0d0f12',
+                        darkSlate: '#13151f',
+                        glassCard: 'rgba(19, 21, 31, 0.8)',
+                        goldAccent: '#d4af37',
+                        goldGlow: '#ffb800',
+                        goldDark: '#997a15',
+                        amberGlow: '#ffa200'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'JetBrains Mono', 'monospace'],
+                        serif: ['Cinzel', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            background-color: #0d0f12;
+            color: #e2e8f0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(19, 21, 31, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.9);
+        }
+
+        .glass-panel-hover {
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-panel-hover:hover {
+            transform: translateY(-6px);
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 20px 40px -15px rgba(212, 175, 55, 0.25);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #ffe8a3 30%, #d4af37 70%, #9a7b1c 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eq-bar {
+            width: 3px;
+            background-color: #d4af37;
+            border-radius: 2px;
+            animation: eqBounce 1.2s infinite ease-in-out alternate;
+        }
+        .eq-bar:nth-child(1) { animation-delay: 0.1s; height: 60%; }
+        .eq-bar:nth-child(2) { animation-delay: 0.3s; height: 100%; }
+        .eq-bar:nth-child(3) { animation-delay: 0.2s; height: 40%; }
+        .eq-bar:nth-child(4) { animation-delay: 0.4s; height: 80%; }
+
+        @keyframes eqBounce {
+            0% { height: 20%; }
+            100% { height: 100%; }
+        }
+
+        .paused .eq-bar {
+            animation-play-state: paused;
+            height: 20% !important;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0d0f12; }
+        ::-webkit-scrollbar-thumb {
+            background: #191c2b;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 4px;
+        }
+
+        .pulse-gold-btn {
+            box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
+            animation: pulse-gold 2.2s infinite;
+        }
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5); }
+            70% { box-shadow: 0 0 0 16px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+    </style>
+</head>
+<body class="relative min-h-screen antialiased selection:bg-goldAccent selection:text-black">
+
+    <canvas id="starfieldCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-60"></canvas>
+
+    <nav class="fixed top-0 left-0 w-full z-50 glass-panel border-b border-goldAccent/20 px-4 sm:px-8 py-3.5">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-goldGlow animate-ping"></span>
+                <span class="font-mono text-xs tracking-wider text-gray-300 font-semibold uppercase">
+                    ITOK KI<span class="text-goldAccent">//25TH.SYS</span>
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div id="eqContainer" class="flex items-end space-x-1 h-4 px-2 paused">
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                </div>
+                <button id="bgmToggleBtn" onclick="toggleBGM()" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-darkSlate border border-goldAccent/30 text-xs font-mono text-gray-300 hover:border-goldAccent transition">
+                    <i id="bgmIcon" class="fas fa-play text-goldAccent"></i>
+                    <span id="bgmLabel" class="hidden sm:inline">MUSIK: OFF</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative z-10 pt-28 pb-20 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto space-y-20">
+
+        <section class="min-h-[75vh] flex flex-col justify-center items-center text-center relative">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-goldAccent/10 border border-goldAccent/40 text-goldGlow text-xs font-mono tracking-widest uppercase mb-6 shadow-sm">
+                <i class="fas fa-crown text-goldAccent"></i> 25 Taon Ngamatua Be • Tubu 02 Oktober 2001
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-4">
+                HORAS JALA SELAMAT ULTAH,
+                <span class="gold-gradient-text font-serif tracking-wider">Ka Lamm</span>
+            </h1>
+
+            <p class="text-gray-300 max-w-2xl text-sm sm:text-base leading-relaxed mb-8 font-light italic bg-darkSlate/80 p-4 sm:p-6 rounded-2xl border border-white/5">
+                "Selamat ulang tahun ma di ho, Ito Hasian na burju! Sai gabe pamasuk pasupasu Debata ngolumu, ganjang umurmu, sehat salelengna, dapot nasa na pinarsinta ni roham, jala sai marlas ni roha ganup ari!"
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="triggerConfetti()" class="pulse-gold-btn px-7 py-3.5 rounded-xl bg-gradient-to-r from-goldAccent via-amberGlow to-goldDark text-black font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:opacity-95 transition">
+                    <i class="fas fa-sparkles"></i> Pamasuk Pesta 🎉
+                </button>
+                <a href="#secret-card-section" class="px-7 py-3.5 rounded-xl bg-darkSlate border border-goldAccent/40 text-gray-200 hover:text-goldGlow font-mono text-xs uppercase tracking-wider flex items-center gap-2 hover:border-goldAccent transition">
+                    <i class="fas fa-envelope-open-text text-goldAccent"></i> Surat Sian Anggimu
+                </a>
+            </div>
+        </section>
+
+        <section class="grid lg:grid-cols-3 gap-6">
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl lg:col-span-1 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-2 text-goldAccent font-mono text-xs tracking-wider mb-2">
+                        <i class="fas fa-clock"></i>
+                        <span>PARHAPOSAN WAKTU</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Pardalanan Ngolu Sian 02.10.2001</h3>
+                    <p class="text-xs text-gray-400 mb-6">Torop ni ari & detik ngolu ni Ito Hasian sahat tu saonari:</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-center font-mono my-2">
+                    <div class="bg-darkSlate/90 p-3 rounded-xl border border-white/5">
+                        <div id="countDays" class="text-2xl sm:text-3xl font-extrabold text-goldGlow">00</div>
+                        <div class="text-[10px] text-gray-400 uppercase mt-1">ARI</div>
+                    </div>
+                    <div class="bg-darkSlate/90 p-3 rounded-xl border border-white/5">
+                        <div id="countHours" class="text-2xl sm:text-3xl font-extrabold text-cyan-400">00</div>
+                        <div class="text-[10px] text-gray-400 uppercase mt-1">JAM</div>
+                    </div>
+                    <div class="bg-darkSlate/90 p-3 rounded-xl border border-white/5">
+                        <div id="countMinutes" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">00</div>
+                        <div class="text-[10px] text-gray-400 uppercase mt-1">MENIT</div>
+                    </div>
+                    <div class="bg-darkSlate/90 p-3 rounded-xl border border-white/5">
+                        <div id="countSeconds" class="text-2xl sm:text-3xl font-extrabold text-purple-400">00</div>
+                        <div class="text-[10px] text-gray-400 uppercase mt-1">DETIK</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-white/10 text-center text-xs font-mono text-gray-400">
+                    STATUS: <span class="text-emerald-400 font-bold">UMUR 25 UNLOCKED 🔥</span>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl lg:col-span-2 space-y-6 flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    <div class="relative group flex-shrink-0">
+                        <div class="w-32 h-36 rounded-2xl overflow-hidden border-2 border-goldAccent/50 p-1 bg-darkSlate">
+                            <img id="mainProfilePic" src="images/1.jpeg" onerror="this.src='https://placehold.co/400x500/12131c/d4af37?text=Ito+Hasian'" alt="Foto Ito Hasian" class="w-full h-full object-cover rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="text-center sm:text-left space-y-2">
+                        <span class="text-xs font-mono text-goldAccent tracking-widest uppercase"># PROFILE</span>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white font-serif">Lamria Mutiara Octaviani</h2>
+                        <p class="text-xs font-mono text-gray-400">Role: Ito Na Burju • Tank • Santai • Parroha Mauliate & Tegar • Mage</p>
+                        <p class="text-xs text-gray-300 leading-relaxed font-light pt-1">
+                            Sai tongtong santai jala cool outfit na, alai rohana super perhatian jala siap jaga keluarga, anjay.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2 font-mono text-xs">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-300">ROHA NA BURJU & LOYALTY</span>
+                            <span class="text-goldGlow">94.9%</span>
+                        </div>
+                        <div class="w-full bg-darkSlate h-2 rounded-full overflow-hidden border border-white/5">
+                            <div class="bg-gradient-to-r from-amber-600 to-goldGlow h-full w-[94.9%]"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-300">MOLO MANGALEAN HEPENG</span>
+                            <span class="text-cyan-400">23.77%</span>
+                        </div>
+                        <div class="w-full bg-darkSlate h-2 rounded-full overflow-hidden border border-white/5">
+                            <div class="bg-gradient-to-r from-blue-600 to-cyan-400 h-full w-[23.77%]"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-300">MOOD SWING-NA</span>
+                            <span class="text-emerald-400">100%</span>
+                        </div>
+                        <div class="w-full bg-darkSlate h-2 rounded-full overflow-hidden border border-white/5">
+                            <div class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full w-[100%]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-white/10 pb-4">
+                <div>
+                    <div class="flex items-center space-x-2 text-goldAccent font-mono text-xs tracking-wider mb-1">
+                        <i class="fas fa-images"></i>
+                        <span>LAGU JALA MEMORI</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white font-serif">📸</h2>
+                </div>
+            </div>
+
+            <!-- 4 Photos Grid -->
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Foto 1 -->
+                <div onclick="openImageModal('images/1.jpeg', 'ale bole bole do bah')" class="glass-panel rounded-2xl overflow-hidden glass-panel-hover cursor-pointer group">
+                    <div class="h-72 overflow-hidden relative">
+                        <img src="images/1.jpeg" onerror="this.src='https://placehold.co/400x600/12131c/d4af37?text=Foto+1'" alt="Foto 1 Ito Hasian" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 text-xs font-mono text-goldGlow"><i class="fas fa-camera mr-1"></i> Yahadis.JPG</span>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-bold text-white text-sm">Sok Imut ✌️</h4>
+                        <p class="text-xs text-gray-400 mt-1">tabo do holan mardalani.</p>
+                    </div>
+                </div>
+
+                <!-- Foto 2 -->
+                <div onclick="openImageModal('images/2.jpeg', 'torus tu kiri')" class="glass-panel rounded-2xl overflow-hidden glass-panel-hover cursor-pointer group">
+                    <div class="h-72 overflow-hidden relative">
+                        <img src="images/2.jpeg" onerror="this.src='https://placehold.co/400x600/12131c/d4af37?text=Foto+2'" alt="Foto 2 Ito Hasian" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 text-xs font-mono text-cyan-400"><i class="fas fa-camera mr-1"></i> Mamereng_aha?.JPG</span>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-bold text-white text-sm">Danau Toba do on?</h4>
+                        <p class="text-xs text-gray-400 mt-1">ise do di ida ho ka?.</p>
+                    </div>
+                </div>
+
+                <!-- Foto 3 -->
+                <div onclick="openImageModal('images/3.jpeg', 'dang di ajak au pang')" class="glass-panel rounded-2xl overflow-hidden glass-panel-hover cursor-pointer group">
+                    <div class="h-72 overflow-hidden relative">
+                        <img src="images/3.jpeg" onerror="this.src='https://placehold.co/400x600/12131c/d4af37?text=Foto+3'" alt="Foto 3 Ito Hasian" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 text-xs font-mono text-emerald-400"><i class="fas fa-camera mr-1"></i> Sohuboto_tudia.JPG</span>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-bold text-white text-sm">Markacamata ateh 😎</h4>
+                        <p class="text-xs text-gray-400 mt-1">boasa markapal? kan adong pesawat.</p>
+                    </div>
+                </div>
+
+                <!-- Foto 4 -->
+                <div onclick="openImageModal('images/4.jpeg', 'Mirror Selfie Di Mess')" class="glass-panel rounded-2xl overflow-hidden glass-panel-hover cursor-pointer group">
+                    <div class="h-72 overflow-hidden relative">
+                        <img src="images/4.jpeg" onerror="this.src='https://placehold.co/400x600/12131c/d4af37?text=Foto+4'" alt="Foto 4 Ito Hasian" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 text-xs font-mono text-purple-400"><i class="fas fa-camera mr-1"></i> Ehk_toe_ma.JPG</span>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-bold text-white text-sm">Holong ni Roha ❤️</h4>
+                        <p class="text-xs text-gray-400 mt-1">bagak do nian hamu nadua.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="secret-card-section" class="glass-panel p-6 sm:p-10 rounded-3xl relative overflow-hidden">
+            <div class="max-w-2xl mx-auto text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-goldAccent/10 text-goldAccent text-xs font-mono mb-4">
+                    <i class="fas fa-lock"></i> SURAT SIAN ROHA
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white font-serif mb-3">SURAT KHUSUS SIAN ANGGIMU</h2>
+                <p class="text-xs text-gray-400 mb-8 font-mono">Pesan pribadi terenkripsi khusus di Ito Hasian. Jama tombol di toru asa mabuka!</p>
+
+                <div id="lockedCard" class="bg-darkSlate/90 p-8 rounded-2xl border border-goldAccent/20 flex flex-col items-center space-y-4">
+                    <div class="w-16 h-16 rounded-2xl bg-black/50 border border-goldAccent/30 flex items-center justify-center text-goldGlow text-2xl shadow-inner">
+                        <i class="fas fa-envelope-open-text"></i>
+                    </div>
+                    <p class="text-xs font-mono text-gray-300"> pincit ma tombol na di toru On asa mambuka surat ultah on.</p>
+                    <button onclick="unlockSecretCard()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-goldAccent to-amberGlow text-black font-bold font-mono text-xs uppercase tracking-wider hover:opacity-90 transition shadow-lg">
+                        <i class="fas fa-unlock mr-2"></i> Buka Surat Sian Anggimu 🔓
+                    </button>
+                </div>
+
+                <div id="unlockedCard" class="hidden bg-darkSlate p-6 sm:p-8 rounded-2xl border border-goldAccent/50 text-left space-y-4 relative shadow-2xl">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                        <span class="text-xs font-mono text-goldGlow flex items-center gap-2">
+                            <i class="fas fa-envelope-open text-goldAccent"></i> SURAT KHUSUS DI ITO HASIAN
+                        </span>
+                        <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">DECRYPTED</span>
+                    </div>
+
+                    <div class="text-gray-200 text-sm leading-relaxed space-y-3 font-sans">
+                        <p class="font-semibold text-goldGlow">Horas jala Selamat Ulang Tahun ma di ho, Ito Hasian na burju! 👋✨</p>
+                        <p>
+                            Selamat ulang tahun na ke-25 da, Ito Hasian! Mauliate godang saleleng on alani akka parbue ni roham na burju, gabe ito na paling mantap, santai, jala tongtong manghaholongi keluarga dohot anggimu.
+                        </p>
+                        <p>
+                            Nang pe Ito tampil gaya na hera panagih utang jala par-emosi, hami saluhutna bangga jala mandok mauliate alani ketegaran ni roham na godang.
+                        </p>
+                        <p>
+                            Sai pamasuk pasupasu Debata ma ngolumu, ganjang umurmu, sehat salelengna, jala lam tu jona dapot nasa na pinarsinta ni roham. Tongtong gabe ito na burju jala pangarapan ni keluarga!
+                        </p>
+                        <p class="pt-2 font-mono text-xs text-goldAccent">
+                            Debata Mamasu-masu Ho Tongtong dah Ito! 🥂🎉
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-xs font-mono text-gray-500 pt-8 border-t border-white/5 space-y-2">
+            <p>DIPAULI DOHOT HOLONG NI ROHA DI HO <span class="text-goldAccent font-bold">ITO HASIAN</span></p>
+            <p class="text-[10px] text-gray-600">loja do dah mambaen on😭</p>
+        </footer>
+
+    </main>
+
+    <div id="imageModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-3xl w-full glass-panel rounded-2xl overflow-hidden relative border border-goldAccent/40">
+            <button onclick="closeImageModal()" class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-darkSlate text-white flex items-center justify-center hover:bg-goldAccent hover:text-black transition">
+                <i class="fas fa-times"></i>
+            </button>
+            <img id="modalImg" src="" alt="Full Preview" class="w-full max-h-[75vh] object-contain bg-black">
+            <div class="p-4 bg-darkSlate text-center">
+                <p id="modalCaption" class="text-xs font-mono text-goldGlow"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Music Player: Count On Me Acoustic -->
+    <audio id="bgAudio" loop preload="auto">
+        <source src="images/ConM.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Starfield Canvas Background
+        const canvas = document.getElementById('starfieldCanvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.8 + 0.2;
+                this.speedY = Math.random() * 0.3 + 0.1;
+                this.alpha = Math.random() * 0.7 + 0.2;
+                this.color = Math.random() > 0.4 ? '#d4af37' : '#ffffff';
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < 0) {
+                    this.y = canvas.height;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            const count = Math.floor((canvas.width * canvas.height) / 12000);
+            for (let i = 0; i < count; i++) {
+                stars.push(new Star());
+            }
+        }
+        initStars();
+
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // Audio Player Controls & Autoplay Logic
+        const bgAudio = document.getElementById('bgAudio');
+        const bgmIcon = document.getElementById('bgmIcon');
+        const bgmLabel = document.getElementById('bgmLabel');
+        const eqContainer = document.getElementById('eqContainer');
+        let isPlaying = false;
+
+        function startAudio() {
+            if (!isPlaying) {
+                bgAudio.play().then(() => {
+                    bgmIcon.className = "fas fa-pause text-goldGlow";
+                    bgmLabel.innerText = "MUSIK: ON";
+                    eqContainer.classList.remove('paused');
+                    isPlaying = true;
+                }).catch(() => {
+                    // Autoplay prevented by browser interaction requirement
+                });
+            }
+        }
+
+        function toggleBGM() {
+            if (isPlaying) {
+                bgAudio.pause();
+                bgmIcon.className = "fas fa-play text-goldAccent";
+                bgmLabel.innerText = "MUSIK: OFF";
+                eqContainer.classList.add('paused');
+                isPlaying = false;
+            } else {
+                startAudio();
+            }
+        }
+
+        // Auto-play attempt on window load & user click fallback
+        window.addEventListener('DOMContentLoaded', () => {
+            startAudio();
+            document.body.addEventListener('click', startAudio, { once: true });
+        });
+
+        // Real-time Birthday Ticker (02 Oct 2001)
+        const birthDate = new Date('2001-10-02T00:00:00');
+
+        function updateLifetimeCounter() {
+            const now = new Date();
+            const diff = now - birthDate;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('countDays').innerText = days.toLocaleString();
+            document.getElementById('countHours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('countMinutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('countSeconds').innerText = String(seconds).padStart(2, '0');
+        }
+        setInterval(updateLifetimeCounter, 1000);
+        updateLifetimeCounter();
+
+        // Confetti Fireworks
+        function triggerConfetti() {
+            confetti({
+                particleCount: 130,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#d4af37', '#ffd700', '#ffffff', '#cd7f32']
+            });
+        }
+
+        // Secret Batak Letter Unlock
+        function unlockSecretCard() {
+            document.getElementById('lockedCard').classList.add('hidden');
+            document.getElementById('unlockedCard').classList.remove('hidden');
+            triggerConfetti();
+            startAudio();
+        }
+
+        // Lightbox Modal
+        function openImageModal(imgSrc, captionText) {
+            document.getElementById('modalImg').src = imgSrc;
+            document.getElementById('modalCaption').innerText = captionText;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
